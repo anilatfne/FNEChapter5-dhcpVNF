@@ -1,0 +1,21 @@
+pid=`docker inspect -f '{{.State.Pid}}' $1`
+
+mkdir -p /var/run/netns 
+
+ln -sf /proc/$pid/ns/net /var/run/netns/dhcpns
+
+ip link add $2  type veth peer name $3
+
+ifconfig $2 up 
+
+ifconfig $3 up 
+
+ip link set $2 netns dhcpns
+
+ip netns exec dhcpns ifconfig $2 up 
+
+ip netns exec dhcpns ifconfig $2
+
+brctl addif $4 $3
+
+ip netns exec dhcpns dhclient $2  
